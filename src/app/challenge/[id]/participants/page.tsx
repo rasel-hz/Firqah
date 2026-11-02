@@ -8,15 +8,14 @@ import { ChallengeGate, ChallengeNav } from '@/components/ChallengeNav.tsx';
 import { ImportPanel } from '@/components/ImportPanel.tsx';
 import { ParticipantCard } from '@/components/ParticipantCard.tsx';
 import { Button, Card, CardTitle, EmptyState, Loading, Notice, buttonClass } from '@/components/ui.tsx';
+import { analyzeInBatches } from '@/lib/client/analyzeBatches.ts';
+import type { BatchReply } from '@/lib/client/analyzeBatches.ts';
 import { postJson } from '@/lib/client/api.ts';
 import { generateRun } from '@/lib/client/generate.ts';
 import type { ImportRow } from '@/lib/csv/participants.ts';
-import type { ReconcileResult } from '@/lib/llama/reconcile.ts';
 import { alignSkills, applyProfile, effectiveLevel, isPendingConfirmation, nextParticipantId } from '@/lib/state/profiles.ts';
 import { useChallenge } from '@/lib/state/store.ts';
 import type { StoredParticipant } from '@/lib/state/types.ts';
-
-type AnalyzeReply = Pick<ReconcileResult, 'profiles' | 'missingIds'> & { warning: string | null };
 
 export default function ParticipantsPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +25,7 @@ export default function ParticipantsPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const [partial, setPartial] = useState<string | null>(null);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
 
   if (!challenge) return <ChallengeGate state={challenge} />;
 
@@ -50,29 +50,32 @@ export default function ParticipantsPage() {
   }
 
   async function analyze() {
+    const total = toAnalyze.length;
     setAnalyzing(true);
     setError(null);
     setPartial(null);
-    const result = await postJson<AnalyzeReply>('/api/analyze-participants', {
-      approvedSkills: skillNames,
-      participants: toAnalyze.map((p) => ({ id: p.id, description: p.description })),
-    });
+    setProgress({ done: 0, total });
+    const summary = await analyzeInBatches(
+      toAnalyze.map((p) => ({ id: p.id, description: p.description })),
+      (batch) => postJson<BatchReply>('/api/analyze-participants', { approvedSkills: skillNames, participants: batch }),
+      ({ profiles }) => {
+        // Saved batch by batch, so finished work survives a later failure or a closed page.
+        const byId = new Map(profiles.map((p) => [p.participantId, p]));
+        update((c) => ({
+          ...c,
+          participants: c.participants.map((p) => {
+            const profile = byId.get(p.id);
+            return profile ? applyProfile(p, profile) : p;
+          }),
+        }));
+        setProgress((current) => ({ done: current.done + profiles.length, total }));
+      },
+    );
     setAnalyzing(false);
-    if (!result.ok) {
-      setError({ code: result.code, message: result.message });
-      return;
-    }
-    const { profiles, missingIds, warning } = result.data;
-    const byId = new Map(profiles.map((p) => [p.participantId, p]));
-    update((c) => ({
-      ...c,
-      participants: c.participants.map((p) => {
-        const profile = byId.get(p.id);
-        return profile ? applyProfile(p, profile) : p;
-      }),
-    }));
-    if (missingIds.length > 0) {
-      setPartial(`لم يرجع Llama نتيجة لـ ${missingIds.length} مشارك. أعد المحاولة أو أدخل مستوياتهم يدويًا.${warning ? ` ${warning}` : ''}`);
+    if (summary.fatal) {
+      setError(summary.fatal);
+    } else if (summary.missingIds.length > 0) {
+      setPartial(`لم يرجع Llama نتيجة لـ ${summary.missingIds.length} مشارك. أعد المحاولة أو أدخل مستوياتهم يدويًا.${summary.warning ? ` ${summary.warning}` : ''}`);
     }
   }
 
@@ -117,7 +120,7 @@ export default function ParticipantsPage() {
           </Button>
           {notAnalyzed.length === 0 && participants.length > 0 ? <span className="text-xs text-muted">تعديلاتك اليدوية تبقى كما هي.</span> : null}
         </div>
-        {analyzing ? <Loading label={`يحلل Llama أوصاف ${toAnalyze.length} مشارك...`} /> : null}
+        {analyzing ? <Loading label={`يحلل Llama الأوصاف... اكتمل ${progress.done} من ${progress.total}`} /> : null}
         {error ? (
           <Notice tone="error" title={error.message}>
             {error.code === 'missing_config' ? 'الوضع اليدوي متاح: اضغط على أي مهارة وحدد المستوى بنفسك. تُعرض هذه القيم على أنها يدوية.' : null}

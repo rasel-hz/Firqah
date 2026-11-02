@@ -15,7 +15,7 @@ hard constraints, and computes the scores. Llama never assigns people.
 | Four screens: home, challenge setup, participants, results | Done, driven in a browser with real Llama |
 | Manual mode when Llama is not configured | Done, driven in a browser |
 | Real Llama (Cloudflare Workers AI, `@cf/meta/llama-3.3-70b-instruct-fp8-fast`) | Tested end to end on the 24-person sample |
-| Deployment | **Not deployed** |
+| Deployment | Live at https://firqah.vercel.app/ |
 
 ## Run the project
 
@@ -45,8 +45,10 @@ manual values are labeled as manual.
 
 ## Deployment
 
-Any host that runs Next.js works, for example Vercel: import the project, add the `LLAMA_*` variables in the host's
-settings, and deploy. There is no database to set up.
+Any host that runs Next.js works. On Vercel: push this repository to GitHub, import it in Vercel, add `LLAMA_API_BASE_URL`,
+`LLAMA_API_KEY` and `LLAMA_MODEL` under Environment Variables, and deploy. There is no database to set up. Vercel's free
+Hobby plan is for personal, non-commercial use and allows 300 seconds per request. Participant analysis sends one short
+request per 5 people, so a slow run does not hit that limit.
 
 ## Design rules
 
@@ -69,9 +71,8 @@ settings, and deploy. There is no database to set up.
 - Llama's levels are a first reading, not a measurement, and it can rate a small mention too highly. That is why the
   organizer can correct every level. Review wording can also flatter a modest level, so the computed numbers are the
   reference.
-- Measured for 25 participants and 6 teams on Cloudflare: participant analysis took 100 to 130 seconds, review 20 to 50
-  seconds, and a full run about 2,000 Neurons (the free plan allows 10,000 per day). A host's request time limit must
-  allow this.
+- Measured for 25 participants and 6 teams on Cloudflare: participant analysis took 100 to 130 seconds in total, review
+  20 to 50 seconds, and a full run about 2,000 Neurons (the free plan allows 10,000 per day).
 - Larger events are not measured yet. A very large review could exceed the model's 24,000-token context window.
 
 ## Measured scenarios
