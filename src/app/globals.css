@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: var(--font-arabic), system-ui, sans-serif;
+
+  --color-canvas: #0a0f1e;
+  --color-surface: #111829;
+  --color-raised: #182136;
+  --color-line: #27324d;
+  --color-ink: #e8ecf5;
+  --color-muted: #9aa6bf;
+  --color-accent: #6d5df0;
+  --color-accent-soft: #b3a8ff;
+  --color-info: #5fd0e6;
+  --color-good: #4ade9b;
+  --color-warn: #f6c35b;
+  --color-bad: #fb8a8a;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
+/* Numbers and code-like values read left to right, even inside RTL text. */
+.ltr-value {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
