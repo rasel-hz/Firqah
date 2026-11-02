@@ -33,7 +33,8 @@ export const participantBatchSchema = z.object({
         z.object({
           name: z.string().min(1),
           level: level.nullable(),
-          confidence: z.number().min(0).max(1),
+          // Models often write null here for an unknown skill. No confidence means 0, so nothing passes as certain.
+          confidence: z.number().min(0).max(1).nullable().transform((value) => value ?? 0),
           evidence: z.string().nullable(),
         }),
       ),

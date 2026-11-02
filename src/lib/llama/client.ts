@@ -121,8 +121,15 @@ async function chat(
       const body = await response.text().catch(() => '');
       throw new LlamaError('provider_error', `HTTP ${response.status} ${body.slice(0, 200)}`);
     }
-    const data = (await response.json()) as { choices?: { message?: { content?: string } }[]; usage?: unknown };
-    if (data.usage) console.info('[llama] usage', JSON.stringify(data.usage));
+    const data = (await response.json()) as {
+      choices?: { message?: { content?: string }; finish_reason?: string }[];
+      usage?: unknown;
+      /** OpenRouter says which provider served the request. */
+      provider?: string;
+    };
+    if (data.usage) {
+      console.info('[llama] usage', data.provider ?? '', data.choices?.[0]?.finish_reason ?? '', JSON.stringify(data.usage));
+    }
     const content = data.choices?.[0]?.message?.content;
     if (typeof content !== 'string' || content.trim() === '') {
       throw new LlamaError('provider_error', 'empty completion');
@@ -159,6 +166,7 @@ export async function callLlamaJson<T>(options: CallOptions<T>): Promise<T> {
     return options.validate(extractJson(first));
   } catch (error) {
     firstProblem = error instanceof Error ? error.message : String(error);
+    console.warn('[llama] repair needed', firstProblem.slice(0, 200));
   }
 
   const repairMessages: ChatMessage[] = [

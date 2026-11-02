@@ -222,6 +222,29 @@ test('review-teams: code tells the model which gaps are unconfirmed and which ar
   assert.deepEqual((await res.json()).reviews[0].gaps, ['Frontend غير مؤكدة']);
 });
 
+test('analyze-participants: a null confidence needs no repair call, and a level with it stays unconfirmed', async () => {
+  const { fetchImpl, prompts } = mockLlama(() =>
+    completion({
+      profiles: [{
+        participant_id: 'P1',
+        skills: [
+          { name: 'UI/UX', level: null, confidence: null, evidence: null },
+          { name: 'Backend', level: 4, confidence: null, evidence: 'بنيت خدمات' },
+        ],
+        needs_confirmation: [],
+      }],
+    }),
+  );
+  const res = await handleAnalyzeParticipants(
+    post({ approvedSkills: ['UI/UX', 'Backend'], participants: [{ id: 'P1', description: 'وصف' }] }),
+    { config, fetchImpl },
+  );
+  assert.equal(prompts.length, 1);
+  const [profile] = (await res.json()).profiles;
+  assert.equal(profile.skills.find((s: { name: string }) => s.name === 'Backend').confidence, 0);
+  assert.ok(profile.needsConfirmation.includes('Backend'));
+});
+
 test('analyze-participants: "not mentioned" is unknown, even when the model calls it level 0', async () => {
   const { fetchImpl } = mockLlama(() =>
     completion({

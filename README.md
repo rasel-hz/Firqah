@@ -31,7 +31,10 @@ Other commands: `npm test`, `npm run typecheck`, `npm run build`.
 
 Any OpenAI-compatible provider that hosts Llama works. Copy the values from your provider's official docs. This project
 was tested on Cloudflare Workers AI, whose base URL is
-`https://api.cloudflare.com/client/v4/accounts/<account-id>/ai/v1`. Groq shut down its Llama chat models in August 2026.
+`https://api.cloudflare.com/client/v4/accounts/<account-id>/ai/v1`, and on OpenRouter, whose base URL is
+`https://openrouter.ai/api/v1` with the model `meta-llama/llama-3.3-70b-instruct`. OpenRouter is paid (no free Llama model
+was listed when checked), costs about $0.005 per full run, and may route each request to a different provider. Groq shut
+down its Llama chat models in August 2026.
 
 | Variable | Meaning |
 |---|---|

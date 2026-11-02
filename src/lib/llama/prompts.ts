@@ -55,7 +55,7 @@ Rules:
 - level: integer 0-5 (0 none/explicitly not possessed, 1 beginner, 2 basic, 3 intermediate, 4 advanced, 5 expert) or null when the description gives insufficient evidence. NEVER invent a level. When unsure, use null.
 - Check the whole description against EVERY approved skill. A concrete action counts as evidence even when mentioned briefly (for example "presented my project to a jury" is evidence for presentation at a modest level). Level 0 needs an explicit statement by the person that they lack the skill. A skill that is simply not mentioned is level null with evidence null, never 0.
 - evidence: a short quote or close paraphrase from that participant's own text that justifies the level. If you cannot point to evidence, level must be null and evidence null.
-- confidence: number 0-1 for how well the evidence supports the level.
+- confidence: always a number 0-1 for how well the evidence supports the level. Use 0 when level is null, never null.
 - Do not over-infer: using an AI API does not mean the person can train models; knowing "programming" does not mean backend experience; enjoying presentations does not mean advanced presentation skill.
 - Never infer or mention gender, religion, ethnicity, health, politics or personality.
 - needs_confirmation: approved skills where the organizer should double-check (unknown or weak evidence).
