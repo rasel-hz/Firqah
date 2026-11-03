@@ -245,6 +245,25 @@ test('analyze-participants: a null confidence needs no repair call, and a level 
   assert.ok(profile.needsConfirmation.includes('Backend'));
 });
 
+test('analyze-participants: the model cannot mark a well-evidenced level as unconfirmed', async () => {
+  const { fetchImpl } = mockLlama(() =>
+    completion({
+      profiles: [{
+        participant_id: 'P1',
+        skills: [{ name: 'المالية', level: 4, confidence: 0.9, evidence: 'أبني نماذج التسعير والتكاليف' }],
+        needs_confirmation: ['المالية'],
+      }],
+    }),
+  );
+  const res = await handleAnalyzeParticipants(
+    post({ approvedSkills: ['المالية'], participants: [{ id: 'P1', description: 'وصف' }] }),
+    { config, fetchImpl },
+  );
+  const [profile] = (await res.json()).profiles;
+  assert.equal(profile.skills[0].level, 4);
+  assert.deepEqual(profile.needsConfirmation, []);
+});
+
 test('analyze-participants: "not mentioned" is unknown, even when the model calls it level 0', async () => {
   const { fetchImpl } = mockLlama(() =>
     completion({

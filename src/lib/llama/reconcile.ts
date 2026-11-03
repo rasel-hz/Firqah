@@ -18,7 +18,7 @@ export interface RawProfile {
 export interface ReconciledProfile {
   participantId: string;
   skills: { name: string; level: number | null; confidence: number; evidence: string | null }[];
-  /** Skills the organizer should confirm: unknown, or confidence below the threshold. */
+  /** Skills the organizer should confirm: unknown, or confidence below the threshold. Decided here, not by the model. */
   needsConfirmation: string[];
   source: 'llama';
 }
@@ -82,10 +82,6 @@ export function reconcileProfiles(
         skills.push({ name, level: null, confidence: 0, evidence: null });
         flagged.add(name);
       }
-    }
-    for (const name of item.needs_confirmation) {
-      const canonical = approved.get(name.trim().toLowerCase());
-      if (canonical) flagged.add(canonical);
     }
 
     byId.set(item.participant_id, {
