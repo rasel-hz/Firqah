@@ -36,7 +36,9 @@ export async function analyzeInBatches<P extends { id: string }>(
   const worker = async () => {
     while (next < batches.length && !summary.fatal) {
       const batch = batches[next++];
-      const result = await send(batch);
+      let result = await send(batch);
+      // Provider failures are often brief, so a failed batch gets one more try before it is reported.
+      if (!result.ok && !FATAL_CODES.has(result.code)) result = await send(batch);
       if (result.ok) {
         succeeded++;
         summary.missingIds.push(...result.data.missingIds);

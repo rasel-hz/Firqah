@@ -81,6 +81,7 @@ export async function handleAnalyzeChallenge(request: Request, deps: LlamaDeps =
       system: CHALLENGE_ANALYSIS_SYSTEM,
       user: buildChallengeAnalysisUser(input),
       validate: (data) => challengeAnalysisSchema.parse(data),
+      timeoutMs: LONG_CALL_TIMEOUT_MS,
       ...deps,
     });
     return Response.json({

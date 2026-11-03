@@ -37,6 +37,19 @@ test('finished batches are delivered, and a failed batch is reported as missing,
   assert.equal(summary.fatal, null);
 });
 
+test('a batch that fails once is tried again, and nobody is reported missing', async () => {
+  let calls = 0;
+  const done: string[] = [];
+  const summary = await analyzeInBatches(
+    people(3),
+    async (batch) => (++calls === 1 ? { ok: false, code: 'provider_error', message: 'خطأ' } : ok(batch)),
+    (reply) => done.push(...reply.profiles.map((p) => p.participantId)),
+  );
+  assert.equal(calls, 2);
+  assert.equal(done.length, 3);
+  assert.deepEqual(summary, { fatal: null, missingIds: [], warning: null });
+});
+
 test('missing configuration stops further requests', async () => {
   let calls = 0;
   const summary = await analyzeInBatches(
