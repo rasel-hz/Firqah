@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CheckCircle2, Download, RefreshCw, Sparkles, XCircle } from 'lucide-react';
 import { ChallengeGate, ChallengeNav } from '@/components/ChallengeNav.tsx';
-import { BarRow, SkillHeatmap, memberName } from '@/components/Charts.tsx';
+import { BarRow, RollingNumber, SkillHeatmap } from '@/components/Charts.tsx';
+import { TeamBoard } from '@/components/TeamBoard.tsx';
 import { Button, Card, CardTitle, EmptyState, Field, Loading, Notice, SourceBadge, buttonClass, inputClass, levelLabel } from '@/components/ui.tsx';
 import { downloadText, postJson } from '@/lib/client/api.ts';
 import { buildRunInput, generateRun } from '@/lib/client/generate.ts';
 import { buildTeamsCsv } from '@/lib/csv/exportTeams.ts';
-import { skillStatus } from '@/lib/llama/review.ts';
 import { teamCoverage } from '@/lib/optimizer/breakdown.ts';
 import { SCORE_WEIGHTS, normalizeRequirements } from '@/lib/optimizer/scoring.ts';
+import { boardFinding, buildBoard } from '@/lib/results/board.ts';
 import { useChallenge } from '@/lib/state/store.ts';
 import type { GenerationRun, TeamReviewEntry } from '@/lib/state/types.ts';
 
@@ -28,7 +29,7 @@ function ReviewList({ title, items }: { title: string; items: string[] }) {
 
 function TeamReview({ review }: { review: TeamReviewEntry }) {
   return (
-    <div className="space-y-2 rounded-lg border border-accent-soft/30 bg-raised/40 p-3">
+    <div className="space-y-3 rounded-2xl bg-raised p-4">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium">مراجعة الفريق</span>
         <SourceBadge kind="llama" />
@@ -46,6 +47,7 @@ export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();
   const { challenge, update, storageFailed } = useChallenge(id);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState(false);
@@ -109,7 +111,7 @@ export default function ResultsPage() {
   const canGenerate = challenge.participants.length > 0 && challenge.skills.length > 0 && challenge.teamCount >= 1 && challenge.teamCount <= challenge.participants.length;
 
   const regenerateButton = (
-    <Button variant="secondary" onClick={regenerate} loading={generating} disabled={!canGenerate}>
+    <Button variant={run ? 'secondary' : 'primary'} onClick={regenerate} loading={generating} disabled={!canGenerate}>
       {generating ? null : <RefreshCw className="size-4" aria-hidden />}
       {run ? 'إعادة التوليد' : 'توليد الفرق'}
     </Button>
@@ -117,7 +119,7 @@ export default function ResultsPage() {
 
   if (!run) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-[14px]">
         <ChallengeNav id={id} name={challenge.name} current="results" />
         <EmptyState title="لم تُولَّد فرق بعد">
           <p className="mb-3">أضف المشاركين وتحقق من مهاراتهم، ثم ولّد الفرق.</p>
@@ -136,39 +138,48 @@ export default function ResultsPage() {
   const skills = requirements.map((r) => r.skill);
   const hardRules = requirements.filter((r) => r.hard);
   const score = result.score;
+  const board = buildBoard(result.teams, result.teamMetrics, input.participants, requirements);
+  const openTeam = board.find((t) => t.id === selectedTeam) ?? board[0];
+  const openIndex = openTeam ? board.indexOf(openTeam) : -1;
+  const openMetrics = openIndex >= 0 ? result.teamMetrics[openIndex] : undefined;
+  const openReview = openTeam ? run.review?.reviews.find((r) => r.team_id === openTeam.id) : undefined;
+  const lead = score && result.baseline ? Math.round((score.overall - result.baseline.maxOverall) * 100) / 100 : null;
 
   function exportCsv() {
     downloadText(`firqah-teams-${run?.result.seed}.csv`, buildTeamsCsv({ teams: result.teams, participants: input.participants, skills }));
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-[14px]">
       <ChallengeNav id={id} name={challenge.name} current="results" />
       {storageFailed ? <Notice tone="error" title="تعذّر الحفظ في المتصفح">قد لا تبقى آخر التعديلات بعد إغلاق الصفحة.</Notice> : null}
       {generateError ? <Notice tone="error" title={generateError} /> : null}
       {stale ? <Notice tone="warning" title="تغيّرت بيانات التحدي أو المشاركين بعد هذه النتيجة">أعد التوليد ليعتمد على آخر البيانات.</Notice> : null}
 
-      <div className="flex flex-wrap items-end gap-2">
-        {regenerateButton}
-        {result.status === 'ok' ? (
-          <Button variant="secondary" onClick={exportCsv}>
-            <Download className="size-4" aria-hidden />
-            تصدير CSV
-          </Button>
-        ) : null}
-        {challenge.runs.length > 1 ? (
-          <div className="ms-auto w-full sm:w-64">
-            <Field label="النتائج السابقة">
-              <select className={inputClass} value={run.id} onChange={(e) => setSelectedRunId(e.target.value)}>
-                {challenge.runs.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {new Date(r.createdAt).toLocaleString('ar-SA-u-nu-latn')} {r.result.score ? `(${r.result.score.overall})` : '(لا توجد فرق)'}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-        ) : null}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <p className="text-sm text-muted">{result.status === 'ok' ? boardFinding(board) : ''}</p>
+        <div className="flex flex-wrap items-end gap-2">
+          {challenge.runs.length > 1 ? (
+            <div className="w-full sm:w-60">
+              <Field label="النتائج السابقة">
+                <select className={inputClass} value={run.id} onChange={(e) => setSelectedRunId(e.target.value)}>
+                  {challenge.runs.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {new Date(r.createdAt).toLocaleString('ar-SA-u-nu-latn')} {r.result.score ? `(${r.result.score.overall})` : '(لا توجد فرق)'}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+          ) : null}
+          {regenerateButton}
+          {result.status === 'ok' ? (
+            <Button variant="secondary" onClick={exportCsv}>
+              <Download className="size-4" aria-hidden />
+              تصدير CSV
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {result.status !== 'ok' ? (
@@ -181,37 +192,135 @@ export default function ResultsPage() {
         </Notice>
       ) : null}
 
-      {result.status === 'ok' && score ? (
+      {result.status === 'ok' && score && openTeam && openMetrics ? (
         <>
-          <div className="grid gap-5 lg:grid-cols-2">
-            <Card className="space-y-4">
+          <section aria-label="الملخص" className="rise grid grid-cols-2 gap-px overflow-hidden rounded-[20px] bg-canvas lg:grid-cols-4">
+            <div className="bg-surface p-4 sm:p-[22px]">
+              <p className="text-[13px] text-muted">الدرجة الإجمالية</p>
+              <p className="mt-1 text-start text-[26px] leading-10 font-semibold whitespace-nowrap sm:text-[32px]">
+                <RollingNumber key={run.id} value={score.overall} />
+                <span className="ltr-value text-sm font-normal text-muted"> / 100</span>
+              </p>
+            </div>
+            <div className="bg-surface p-4 sm:p-[22px]">
+              <p className="text-[13px] text-muted">الشروط الإلزامية</p>
+              <p className={`mt-1 flex items-center gap-2 text-base leading-10 font-medium ${result.validation.valid ? 'text-good' : 'text-bad'}`}>
+                {result.validation.valid ? <CheckCircle2 className="size-4" aria-hidden /> : <XCircle className="size-4" aria-hidden />}
+                {result.validation.valid ? 'كلها محققة' : 'غير محققة'}
+              </p>
+            </div>
+            <div className="bg-surface p-4 sm:p-[22px]">
+              <p className="text-[13px] text-muted">مقابل أفضل توزيع عشوائي</p>
+              <p className="ltr-value num mt-1 text-start text-2xl leading-10 font-medium">{lead === null ? '—' : `${lead > 0 ? '+' : ''}${lead}`}</p>
+            </div>
+            <div className="bg-surface p-4 sm:p-[22px]">
+              <p className="text-[13px] text-muted">قيم المهارات المجهولة</p>
+              <p className="ltr-value num mt-1 text-start text-2xl leading-10 font-medium">{Math.round(score.unknownRatio * 100)}%</p>
+            </div>
+          </section>
+
+          <div className="rise" style={{ '--step': 1 } as React.CSSProperties}>
+            <TeamBoard runId={run.id} teams={board} skills={skills} selected={openTeam.id} onSelect={setSelectedTeam} />
+          </div>
+
+          <Card className="rise space-y-4" key={`${run.id}-${openTeam.id}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="ltr-value text-base font-semibold">{openTeam.id}</h2>
+              <span className="text-sm text-muted">
+                التغطية <span className="ltr-value num font-medium text-ink">{teamCoverage(openMetrics, requirements)}%</span> · الخبرة{' '}
+                <span className="ltr-value num font-medium text-ink">{openMetrics.experience}</span>
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="space-y-3">
+                <ul className="divide-y divide-line text-sm">
+                  {openTeam.members.map((member) => (
+                    <li key={member.id} className="flex flex-wrap items-baseline justify-between gap-x-3 py-2">
+                      <span>{member.name}</span>
+                      <span className="text-xs text-muted">{member.qualified.join('، ') || '—'}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <SourceBadge kind="computed" />
+                  {openTeam.status.every((s) => s.status === 'met') ? <span className="text-good">كل المهارات المطلوبة مغطاة</span> : null}
+                  {openTeam.status.some((s) => s.status === 'missing') ? (
+                    <span className="text-bad">نقص: <span className="ltr-value">{openTeam.status.filter((s) => s.status === 'missing').map((s) => s.skill).join('، ')}</span></span>
+                  ) : null}
+                  {openTeam.status.some((s) => s.status === 'unconfirmed') ? (
+                    <span className="text-muted">غير مؤكدة: <span className="ltr-value">{openTeam.status.filter((s) => s.status === 'unconfirmed').map((s) => s.skill).join('، ')}</span></span>
+                  ) : null}
+                </div>
+              </div>
+              <div className="space-y-2">
+                {reviewing && !openReview ? <Loading label="يكتب Llama مراجعة الفرق..." /> : null}
+                {run.reviewError ? (
+                  <Notice tone="warning" title="مراجعة Llama غير متاحة">
+                    <p>{run.reviewError} الفرق صالحة ولا تعتمد على المراجعة.</p>
+                    <Button variant="secondary" className="mt-2" loading={reviewing} onClick={() => void requestReview(run, challenge.name, challenge.objective)}>
+                      <Sparkles className="size-4" aria-hidden />
+                      إعادة المحاولة
+                    </Button>
+                  </Notice>
+                ) : null}
+                {openReview ? <TeamReview review={openReview} /> : null}
+                {run.review && !openReview ? <Notice tone="warning" title="لم يرجع Llama مراجعة لهذا الفريق" /> : null}
+              </div>
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-1 gap-[14px] lg:grid-cols-3">
+            <Card className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-bold">الدرجة الإجمالية</h2>
+                <h2 className="text-base font-semibold">تفصيل الدرجة</h2>
                 <SourceBadge kind="computed" />
               </div>
-              <p className="text-5xl font-bold tabular-nums ltr-value text-start">{score.overall}<span className="text-xl font-normal text-muted"> / 100</span></p>
-              <p className="text-sm text-muted">أفضل حل صالح وجده البحث. هذه درجة وفق المعايير المحددة، وليست احتمال نجاح الفريق.</p>
               <div className="space-y-2">
                 <BarRow label={`التغطية (${SCORE_WEIGHTS.coverage * 100}%)`} value={score.coverage} max={100} display={String(score.coverage)} />
-                <BarRow label={`توازن المهارات (${SCORE_WEIGHTS.balance * 100}%)`} value={score.balance} max={100} display={String(score.balance)} />
-                <BarRow label={`توازن الخبرة (${SCORE_WEIGHTS.experience * 100}%)`} value={score.experience} max={100} display={String(score.experience)} />
+                <BarRow label={`توازن المهارات (${SCORE_WEIGHTS.balance * 100}%)`} value={score.balance} max={100} display={String(score.balance)} step={1} />
+                <BarRow label={`توازن الخبرة (${SCORE_WEIGHTS.experience * 100}%)`} value={score.experience} max={100} display={String(score.experience)} step={2} />
               </div>
+              <p className="text-xs text-muted">أفضل حل صالح وجده البحث. درجة وفق المعايير المحددة، وليست احتمال نجاح الفريق.</p>
               {score.unknownRatio > 0 ? (
-                <Notice tone="warning" title={`${Math.round(score.unknownRatio * 100)}% من قيم المهارات مجهولة`}>
-                  كلما زادت القيم المجهولة قلّت الثقة في هذه الدرجة. <Link href={`/challenge/${id}/participants`} className="underline">أكمل البيانات</Link>.
-                </Notice>
+                <p className="text-xs text-muted">
+                  كلما زادت القيم المجهولة قلّت الثقة في هذه الدرجة. <Link href={`/challenge/${id}/participants`} className="text-ink underline">أكمل البيانات</Link>.
+                </p>
               ) : null}
             </Card>
 
             <Card className="space-y-3">
-              <CardTitle>التحقق من الشروط</CardTitle>
-              <div className={`flex items-center gap-2 text-sm font-medium ${result.validation.valid ? 'text-good' : 'text-bad'}`}>
-                {result.validation.valid ? <CheckCircle2 className="size-4" aria-hidden /> : <XCircle className="size-4" aria-hidden />}
-                {result.validation.valid ? 'كل الشروط الإلزامية محققة' : 'توجد شروط غير محققة'}
+              <CardTitle hint="الفرق التي فيها العدد المطلوب من المؤهلين.">تغطية المهارات</CardTitle>
+              <div className="space-y-2">
+                {score.perRequirement.map((r, i) => (
+                  <BarRow key={r.skill} label={r.skill} value={r.ratio} max={1} display={`${r.teamsSatisfied}/${r.teamCount}`} title={`${r.skill}: ${r.teamsSatisfied} من ${r.teamCount} فرق`} step={i} />
+                ))}
               </div>
+            </Card>
+
+            {result.baseline ? (
+              <Card className="space-y-3">
+                <CardTitle hint={`${result.baseline.runs} توزيعًا عشوائيًا بأحجام صحيحة وبنفس التقييم، مقاسة في هذا التشغيل.`}>مقارنة بالعشوائي</CardTitle>
+                <div className="space-y-2">
+                  <BarRow label="هذه الفرق" value={score.overall} max={100} display={String(score.overall)} />
+                  <BarRow label="أفضل عشوائي" tone="muted" value={result.baseline.maxOverall} max={100} display={String(result.baseline.maxOverall)} step={1} />
+                  <BarRow label="متوسط العشوائي" tone="muted" value={result.baseline.meanOverall} max={100} display={String(result.baseline.meanOverall)} step={2} />
+                  <BarRow label="أقل عشوائي" tone="muted" value={result.baseline.minOverall} max={100} display={String(result.baseline.minOverall)} step={3} />
+                </div>
+                {hardRules.length > 0 ? <p className="text-xs text-muted">حقق {Math.round(result.baseline.validShare * 100)}% من التوزيعات العشوائية كل الشروط الإلزامية.</p> : null}
+              </Card>
+            ) : null}
+          </div>
+
+          <div className="grid grid-cols-1 gap-[14px] lg:grid-cols-3">
+            <Card className="space-y-3 lg:col-span-2">
+              <CardTitle>توزيع المهارات بين الفرق</CardTitle>
+              <SkillHeatmap skills={skills} metrics={result.teamMetrics} />
+            </Card>
+            <Card className="space-y-3">
+              <CardTitle>التحقق من الشروط</CardTitle>
               <ul className="space-y-1 text-sm text-muted">
-                <li>كل مشارك في فريق واحد فقط ({input.participants.length} مشارك)</li>
-                <li>أحجام الفرق: <span className="ltr-value">{result.capacities.join('، ')}</span></li>
+                <li>كل مشارك في فريق واحد فقط (<span className="num">{input.participants.length}</span> مشارك)</li>
+                <li>أحجام الفرق: <span className="ltr-value num">{result.capacities.join('، ')}</span></li>
                 {hardRules.length === 0 ? <li>لم تُفعَّل شروط مهارات إلزامية.</li> : null}
                 {hardRules.map((rule) => (
                   <li key={rule.skill}>
@@ -220,101 +329,9 @@ export default function ResultsPage() {
                 ))}
               </ul>
               <p className="text-xs text-muted">صلاحية الشروط منفصلة عن الدرجة.</p>
-              <p className="text-xs text-muted">الرقم المرجعي للتوزيع (seed): <span className="ltr-value">{result.seed}</span></p>
+              <p className="text-xs text-muted">الرقم المرجعي للتوزيع (seed): <span className="ltr-value num">{result.seed}</span></p>
             </Card>
           </div>
-
-          <div className="grid gap-5 lg:grid-cols-2">
-            <Card className="space-y-3">
-              <CardTitle hint="نسبة الفرق التي فيها العدد المطلوب من المؤهلين لكل مهارة.">تغطية المهارات</CardTitle>
-              <div className="space-y-2">
-                {score.perRequirement.map((r) => (
-                  <BarRow key={r.skill} label={r.skill} value={r.ratio} max={1} display={`${r.teamsSatisfied}/${r.teamCount}`} title={`${r.skill}: ${r.teamsSatisfied} من ${r.teamCount} فرق`} />
-                ))}
-              </div>
-            </Card>
-
-            {result.baseline ? (
-              <Card className="space-y-3">
-                <CardTitle hint={`${result.baseline.runs} توزيعًا عشوائيًا بأحجام صحيحة، بنفس دالة التقييم. قياس حقيقي من هذا التشغيل.`}>مقارنة بالتوزيع العشوائي</CardTitle>
-                <div className="space-y-2">
-                  <BarRow label="هذه الفرق" tone="accent" value={score.overall} max={100} display={String(score.overall)} />
-                  <BarRow label="أفضل عشوائي" tone="muted" value={result.baseline.maxOverall} max={100} display={String(result.baseline.maxOverall)} />
-                  <BarRow label="متوسط العشوائي" tone="muted" value={result.baseline.meanOverall} max={100} display={String(result.baseline.meanOverall)} />
-                  <BarRow label="أقل عشوائي" tone="muted" value={result.baseline.minOverall} max={100} display={String(result.baseline.minOverall)} />
-                </div>
-                {hardRules.length > 0 ? <p className="text-xs text-muted">حقق {Math.round(result.baseline.validShare * 100)}% من التوزيعات العشوائية كل الشروط الإلزامية.</p> : null}
-              </Card>
-            ) : null}
-          </div>
-
-          <Card className="space-y-3">
-            <CardTitle>توزيع المهارات بين الفرق</CardTitle>
-            <SkillHeatmap skills={skills} metrics={result.teamMetrics} />
-          </Card>
-
-          {reviewing ? <Loading label="يكتب Llama مراجعة الفرق..." /> : null}
-          {run.reviewError ? (
-            <Notice tone="warning" title="مراجعة Llama غير متاحة">
-              <p>{run.reviewError} الفرق أدناه صالحة ولا تعتمد على المراجعة.</p>
-              <Button variant="secondary" className="mt-2" loading={reviewing} onClick={() => void requestReview(run, challenge.name, challenge.objective)}>
-                <Sparkles className="size-4" aria-hidden />
-                إعادة المحاولة
-              </Button>
-            </Notice>
-          ) : null}
-          {run.review && run.review.missingTeamIds.length > 0 ? (
-            <Notice tone="warning" title={`لم يرجع Llama مراجعة للفرق: ${run.review.missingTeamIds.join('، ')}`} />
-          ) : null}
-
-          <section aria-labelledby="teams-heading" className="space-y-3">
-            <h2 id="teams-heading" className="text-lg font-bold">الفرق</h2>
-            <ul className="grid gap-4 lg:grid-cols-2">
-              {result.teams.map((team, i) => {
-                const metrics = result.teamMetrics[i];
-                const review = run.review?.reviews.find((r) => r.team_id === team.id);
-                const levelsOf = (skill: string) => team.memberIds.map((memberId) => input.participants.find((p) => p.id === memberId)?.skills[skill] ?? null);
-                const missing = metrics.gaps.filter((g) => skillStatus(metrics.gaps, g, levelsOf(g)) === 'missing');
-                const unconfirmed = metrics.gaps.filter((g) => skillStatus(metrics.gaps, g, levelsOf(g)) === 'unconfirmed');
-                return (
-                  <li key={team.id}>
-                    <Card className="space-y-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="font-bold ltr-value">{team.id}</h3>
-                        <span className="text-sm text-muted">التغطية <span className="ltr-value font-medium text-ink">{teamCoverage(metrics, requirements)}%</span> · الخبرة <span className="ltr-value font-medium text-ink">{metrics.experience}</span></span>
-                      </div>
-                      <ul className="space-y-1 text-sm">
-                        {team.memberIds.map((memberId) => {
-                          const person = input.participants.find((p) => p.id === memberId);
-                          return (
-                            <li key={memberId} className="flex flex-wrap items-baseline justify-between gap-x-3">
-                              <span>{memberName(input.participants, memberId)}</span>
-                              <span className="text-xs text-muted">
-                                {requirements
-                                  .filter((r) => {
-                                    const level = person?.skills[r.skill];
-                                    return typeof level === 'number' && level >= r.minLevel;
-                                  })
-                                  .map((r) => r.skill)
-                                  .join('، ') || '—'}
-                              </span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3 text-sm">
-                        <SourceBadge kind="computed" />
-                        {metrics.gaps.length === 0 ? <span className="text-good">كل المهارات المطلوبة مغطاة</span> : null}
-                        {missing.length > 0 ? <span className="text-warn">فجوات: <span className="ltr-value">{missing.join('، ')}</span></span> : null}
-                        {unconfirmed.length > 0 ? <span className="text-muted">غير مؤكدة: <span className="ltr-value">{unconfirmed.join('، ')}</span></span> : null}
-                      </div>
-                      {review ? <TeamReview review={review} /> : null}
-                    </Card>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
         </>
       ) : null}
     </div>

@@ -87,7 +87,7 @@ export function ImportPanel({ existingNames, onImport }: { existingNames: string
         <div className="space-y-3">
           <p className="text-sm text-muted">يجب أن يحتوي الملف على العمودين name و description.</p>
           <div className="flex flex-wrap gap-2">
-            <label className={`${buttonClass()} cursor-pointer focus-within:outline-2 focus-within:outline-info`}>
+            <label className={`${buttonClass()} cursor-pointer focus-within:outline-2 focus-within:outline-ink`}>
               <FileUp className="size-4" aria-hidden />
               اختيار ملف
               <input type="file" accept=".csv,text/csv" className="sr-only" onChange={readFile} />

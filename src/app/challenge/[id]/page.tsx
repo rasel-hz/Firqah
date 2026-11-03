@@ -142,7 +142,7 @@ export default function ChallengeSetupPage() {
       {challenge.analysis ? (
         <Card className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-bold">تحليل التحدي</h2>
+            <h2 className="text-base font-semibold">تحليل التحدي</h2>
             <SourceBadge kind="llama" />
           </div>
           <p className="text-sm"><span className="text-muted">النوع: </span>{challenge.analysis.challengeType}</p>
@@ -166,7 +166,7 @@ export default function ChallengeSetupPage() {
         {challenge.skills.length === 0 ? <p className="text-sm text-muted">لا توجد مهارات بعد. حلّل التحدي أو أضف مهارة يدويًا.</p> : null}
         <ul className="space-y-3">
           {challenge.skills.map((skill, i) => (
-            <li key={skill.skill} className="space-y-3 rounded-lg border border-line bg-raised/40 p-3">
+            <li key={skill.skill} className="arrive space-y-3 rounded-2xl bg-raised p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium ltr-value">{skill.skill}</span>
                 <SourceBadge kind={skill.source} />
@@ -188,7 +188,7 @@ export default function ChallengeSetupPage() {
                 </Field>
               </div>
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="size-4 accent-accent" checked={skill.hard} onChange={(e) => updateSkill(skill.skill, { hard: e.target.checked })} />
+                <input type="checkbox" className="size-4 accent-white" checked={skill.hard} onChange={(e) => updateSkill(skill.skill, { hard: e.target.checked })} />
                 شرط إلزامي في كل فريق
               </label>
             </li>

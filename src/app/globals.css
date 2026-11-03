@@ -1,25 +1,31 @@
 @import 'tailwindcss';
 
+/* FIRQAH's colours: warm black, wool, madder red and saffron. Saffron marks what is complete. */
 @theme {
   --font-sans: var(--font-arabic), system-ui, sans-serif;
+  --font-display: var(--font-kufi), var(--font-arabic), sans-serif;
 
-  --color-canvas: #0a0f1e;
-  --color-surface: #111829;
-  --color-raised: #182136;
-  --color-line: #27324d;
-  --color-ink: #e8ecf5;
-  --color-muted: #9aa6bf;
-  --color-accent: #6d5df0;
-  --color-accent-soft: #b3a8ff;
-  --color-info: #5fd0e6;
-  --color-good: #4ade9b;
-  --color-warn: #f6c35b;
-  --color-bad: #fb8a8a;
+  --color-canvas: #0e0c0b;
+  --color-surface: #1a1715;
+  --color-raised: #2c2825;
+  --color-line: #38322d;
+  --color-control: #57504a;
+  --color-ink: #f4ecdf;
+  --color-muted: #bdb3a5;
+  --color-madder: #a32a1c;
+  --color-data: #e9ac2b;
+  --color-good: #e9ac2b;
+  --color-warn: #f0c987;
+  --color-bad: #ef6a56;
+
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
+  font-size: 14px;
+  line-height: 20px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -33,4 +39,96 @@ textarea {
 .ltr-value {
   direction: ltr;
   unicode-bidi: isolate;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Feedback under the hand. Every control answers a press. */
+.press {
+  transition:
+    transform 140ms var(--ease-out-soft),
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+body {
+  overflow-x: clip;
+}
+
+/* A section that runs to both window edges, from inside the centred column. */
+.bleed {
+  margin-inline: calc(50% - 50vw);
+}
+
+/* Parts of a landing section arrive as it scrolls in. Browsers without scroll timelines show them at once. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+
+/* Every hidden starting state lives in this block, so reduced motion is simply the finished page. */
+@media (prefers-reduced-motion: no-preference) {
+  .press:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .rise {
+    animation: rise 640ms var(--ease-out-soft) both;
+    animation-delay: calc(var(--step, 0) * 80ms);
+  }
+
+  .grow {
+    transform-origin: right;
+    animation: grow 800ms var(--ease-out-soft) both;
+    animation-delay: calc(var(--step, 0) * 60ms);
+  }
+
+  .arrive {
+    animation: arrive 320ms var(--ease-out-soft) both;
+  }
+
+  .swap {
+    animation: arrive 240ms var(--ease-out-soft) both;
+  }
+
+  /* The last piece settles into its place once when the page opens: the only move on the first screen. */
+  .settle {
+    animation: settle 900ms var(--ease-out-soft) 300ms both;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translate(70px, -70px) rotate(45deg);
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
 }

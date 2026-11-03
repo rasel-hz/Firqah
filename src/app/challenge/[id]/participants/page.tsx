@@ -7,7 +7,7 @@ import { ArrowLeft, Sparkles } from 'lucide-react';
 import { ChallengeGate, ChallengeNav } from '@/components/ChallengeNav.tsx';
 import { ImportPanel } from '@/components/ImportPanel.tsx';
 import { ParticipantCard } from '@/components/ParticipantCard.tsx';
-import { Button, Card, CardTitle, EmptyState, Loading, Notice, buttonClass } from '@/components/ui.tsx';
+import { Button, Card, CardTitle, EmptyState, Loading, Notice, PersonDots, buttonClass } from '@/components/ui.tsx';
 import { analyzeInBatches } from '@/lib/client/analyzeBatches.ts';
 import type { BatchReply } from '@/lib/client/analyzeBatches.ts';
 import { postJson } from '@/lib/client/api.ts';
@@ -120,7 +120,12 @@ export default function ParticipantsPage() {
           </Button>
           {notAnalyzed.length === 0 && participants.length > 0 ? <span className="text-xs text-muted">تعديلاتك اليدوية تبقى كما هي.</span> : null}
         </div>
-        {analyzing ? <Loading label={`يحلل Llama الأوصاف... اكتمل ${progress.done} من ${progress.total}`} /> : null}
+        {analyzing ? (
+          <div className="space-y-2">
+            <Loading label={`يحلل Llama الأوصاف... اكتمل ${progress.done} من ${progress.total}`} />
+            <PersonDots done={progress.done} total={progress.total} />
+          </div>
+        ) : null}
         {error ? (
           <Notice tone="error" title={error.message}>
             {error.code === 'missing_config' ? 'الوضع اليدوي متاح: اضغط على أي مهارة وحدد المستوى بنفسك. تُعرض هذه القيم على أنها يدوية.' : null}

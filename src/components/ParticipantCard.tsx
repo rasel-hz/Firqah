@@ -8,14 +8,14 @@ import type { ProfileSkill, StoredParticipant } from '@/lib/state/types.ts';
 import { Button, Card, Field, LevelSelect, SourceBadge, inputClass, levelLabel } from './ui.tsx';
 
 function chipStyle(skill: ProfileSkill): string {
-  if (isPendingConfirmation(skill)) return 'border-warn/60 bg-warn/10';
-  if (effectiveLevel(skill) === null) return 'border-dashed border-line text-muted';
-  return 'border-line bg-raised';
+  if (isPendingConfirmation(skill)) return 'border-warn bg-canvas';
+  if (effectiveLevel(skill) === null) return 'border-control bg-canvas text-muted';
+  return 'border-transparent bg-raised';
 }
 
 function SkillDetail({ skill, participant, onChange }: { skill: ProfileSkill; participant: StoredParticipant; onChange: (p: StoredParticipant) => void }) {
   return (
-    <div className="space-y-3 rounded-lg border border-line bg-raised/40 p-3 text-sm">
+    <div className="swap space-y-3 rounded-2xl bg-raised p-3 text-sm">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-medium ltr-value">{skill.name}</span>
         {skill.source ? <SourceBadge kind={skill.source} /> : <span className="text-xs text-muted">لا توجد قيمة بعد</span>}
@@ -81,7 +81,7 @@ export function ParticipantCard({
   }
 
   return (
-    <Card className="space-y-3">
+    <Card className="arrive space-y-3 !bg-canvas">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {editing ? (
@@ -124,7 +124,7 @@ export function ParticipantCard({
                 aria-expanded={openSkill === skill.name}
                 title={skill.evidence ?? undefined}
                 onClick={() => setOpenSkill(openSkill === skill.name ? null : skill.name)}
-                className={`inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-xs hover:border-accent-soft focus-visible:outline-2 focus-visible:outline-info ${chipStyle(skill)} ${openSkill === skill.name ? 'ring-1 ring-accent-soft' : ''}`}
+                className={`press inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-xs hover:border-ink focus-visible:outline-2 focus-visible:outline-ink ${chipStyle(skill)} ${openSkill === skill.name ? 'ring-1 ring-ink' : ''}`}
               >
                 {isPendingConfirmation(skill) ? <AlertTriangle className="size-3 text-warn" aria-label="يحتاج تأكيدًا" /> : null}
                 <span className="ltr-value">{skill.name}</span>
