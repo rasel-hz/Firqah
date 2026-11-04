@@ -242,7 +242,6 @@ export default function ResultsPage() {
                   ))}
                 </ul>
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <SourceBadge kind="computed" />
                   {openTeam.status.every((s) => s.status === 'met') ? <span className="text-good">كل المهارات المطلوبة مغطاة</span> : null}
                   {openTeam.status.some((s) => s.status === 'missing') ? (
                     <span className="text-bad">نقص: <span className="ltr-value">{openTeam.status.filter((s) => s.status === 'missing').map((s) => s.skill).join('، ')}</span></span>
@@ -271,10 +270,7 @@ export default function ResultsPage() {
 
           <div className="grid grid-cols-1 gap-[14px] lg:grid-cols-3">
             <Card className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-semibold">تفصيل الدرجة</h2>
-                <SourceBadge kind="computed" />
-              </div>
+              <h2 className="text-lg font-semibold">تفصيل الدرجة</h2>
               <div className="space-y-2">
                 <BarRow label={`التغطية (${SCORE_WEIGHTS.coverage * 100}%)`} value={score.coverage} max={100} display={String(score.coverage)} />
                 <BarRow label={`توازن المهارات (${SCORE_WEIGHTS.balance * 100}%)`} value={score.balance} max={100} display={String(score.balance)} step={1} />

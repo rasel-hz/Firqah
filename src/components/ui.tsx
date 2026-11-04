@@ -111,12 +111,11 @@ export function EmptyState({ title, children }: { title: string; children?: Reac
   );
 }
 
-/** Says where a value came from, so manual or computed data is never mistaken for AI output. */
-export function SourceBadge({ kind }: { kind: 'llama' | 'manual' | 'computed' | 'synthetic' }) {
+/** Says where a value came from, so manual data is never mistaken for AI output. */
+export function SourceBadge({ kind }: { kind: 'llama' | 'manual' | 'synthetic' }) {
   const styles = {
     llama: ['من AI', 'bg-lavender text-violet-deep'],
     manual: ['يدوي', 'bg-canvas text-muted'],
-    computed: ['محسوب بالكود', 'bg-sky/20 text-ink'],
     synthetic: ['بيانات اصطناعية', 'bg-peach/25 text-warn'],
   }[kind];
   return (
