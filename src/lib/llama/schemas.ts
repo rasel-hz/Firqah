@@ -25,6 +25,24 @@ export const challengeAnalysisSchema = z.object({
 });
 export type ChallengeAnalysis = z.infer<typeof challengeAnalysisSchema>;
 
+/** Letters that are neither Arabic nor Latin. The model sometimes slips into another alphabet mid-answer. */
+const STRAY_ALPHABET = /[^\P{L}\p{Script=Arabic}\p{Script=Latin}]/u;
+
+export function hasStrayAlphabet(text: string): boolean {
+  return STRAY_ALPHABET.test(text);
+}
+
+/** Removes advice the organizer could not read. It never rewrites the model's words. */
+export function dropStrayText(analysis: ChallengeAnalysis): ChallengeAnalysis {
+  const readable = (items: string[]) => items.filter((item) => !hasStrayAlphabet(item));
+  return {
+    ...analysis,
+    missing_information: readable(analysis.missing_information),
+    recommendations: readable(analysis.recommendations),
+    required_skills: analysis.required_skills.map((s) => (hasStrayAlphabet(s.reason) ? { ...s, reason: '' } : s)),
+  };
+}
+
 export const participantBatchSchema = z.object({
   profiles: z.array(
     z.object({

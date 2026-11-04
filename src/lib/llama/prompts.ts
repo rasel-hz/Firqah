@@ -18,8 +18,8 @@ Rules:
 - suggested_minimum_level is an integer 0-5 (0 none, 1 beginner, 2 basic, 3 intermediate, 4 advanced, 5 expert).
 - suggested_minimum_per_team is an integer 0-3. Use 0 when the skill is helpful but not essential.
 - Everything you return is a SUGGESTION. Never describe anything as mandatory.
-- If the description lacks information you need (team size, duration, deliverable, tech stack), list it in missing_information instead of guessing.
-- Write "reason", "missing_information" and "recommendations" in the same language as the challenge description.
+- If the description lacks information you need to choose the skills, list it in missing_information instead of guessing. Never list anything you were given, such as the number of teams or participants. Never ask about technology unless the challenge is about building something technical. If nothing important is missing, return [].
+- Write "reason", "missing_information" and "recommendations" in the same language as the challenge description. Arabic text uses Arabic letters only, apart from names of products or tools. Never use any other alphabet, such as Cyrillic.
 
 JSON shape:
 {
@@ -35,12 +35,16 @@ export function buildChallengeAnalysisUser(input: {
   description: string;
   objective?: string;
   notes?: string;
+  plannedParticipants?: number;
+  teamCount?: number;
 }): string {
   return [
     `Challenge name: ${input.name}`,
     `Description: ${input.description}`,
     input.objective ? `Main objective: ${input.objective}` : '',
     input.notes ? `Organizer notes: ${input.notes}` : '',
+    input.plannedParticipants ? `Expected participants: ${input.plannedParticipants}` : '',
+    input.teamCount ? `Number of teams: ${input.teamCount}` : '',
   ]
     .filter(Boolean)
     .join('\n');
@@ -56,11 +60,13 @@ Rules:
 - Match by meaning, not by exact words: building budgets is evidence for a finance skill even if the description never says "finance".
 - level: integer 0-5 (0 none/explicitly not possessed, 1 beginner, 2 basic, 3 intermediate, 4 advanced, 5 expert) or null when the description gives insufficient evidence. NEVER invent a level. When unsure, use null.
 - Check the whole description against EVERY approved skill. A concrete action counts as evidence even when mentioned briefly (for example "presented my project to a jury" is evidence for presentation at a modest level). Level 0 needs an explicit statement by the person that they lack the skill. A skill that is simply not mentioned is level null with evidence null, never 0.
+- Related experience counts. An activity that clearly uses a skill is evidence even when the skill is never named: leading guided tours for visitors shows guest service and presenting; building pricing models shows financial planning; running paid ad campaigns shows marketing. Give such indirect evidence level 2 or 3 and confidence 0.6 to 0.8. Leave a skill unknown only when nothing in the description connects to it.
+- List only skills you have evidence for and leave the others out; they are recorded as unknown automatically.
 - evidence: a short quote or close paraphrase from that participant's own text that justifies the level. If you cannot point to evidence, level must be null and evidence null.
 - confidence: always a number 0-1 for how well the evidence supports the level. Use 0 when level is null, never null.
 - Do not over-infer: using an AI API does not mean the person can train models; knowing "programming" does not mean backend experience; enjoying presentations does not mean advanced presentation skill.
 - Never infer or mention gender, religion, ethnicity, health, politics or personality.
-- needs_confirmation: only approved skills where your evidence is weak. Leave out skills with clear evidence.
+- needs_confirmation: always []. The app decides this from your confidence.
 - Return one entry for EVERY participant id you were given, using the exact same id.
 
 JSON shape:

@@ -26,6 +26,9 @@ function describeSizes(participants: number, teams: number): string {
   }
 }
 
+/** An empty or out-of-range field is simply not sent, so it cannot fail the analysis. */
+const validCount = (value: number) => (Number.isInteger(value) && value >= 1 && value <= 300 ? value : undefined);
+
 const IMPORTANCE = { critical: 'حرجة', high: 'عالية', medium: 'متوسطة', low: 'منخفضة' } as const;
 
 export default function ChallengeSetupPage() {
@@ -49,6 +52,8 @@ export default function ChallengeSetupPage() {
       name: challenge.name,
       description: challenge.description,
       objective: challenge.objective.trim() || undefined,
+      plannedParticipants: validCount(challenge.plannedParticipants),
+      teamCount: validCount(challenge.teamCount),
     });
     setAnalyzing(false);
     if (!result.ok) {

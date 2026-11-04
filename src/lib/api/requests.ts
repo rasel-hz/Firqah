@@ -18,6 +18,8 @@ export const analyzeChallengeRequest = z.object({
   description: z.string().trim().min(1).max(5000),
   objective: z.string().trim().max(1000).optional(),
   notes: z.string().trim().max(2000).optional(),
+  plannedParticipants: z.number().int().min(1).max(300).optional(),
+  teamCount: z.number().int().min(1).max(300).optional(),
 });
 
 export const analyzeParticipantsRequest = z.object({

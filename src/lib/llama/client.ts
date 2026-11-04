@@ -58,6 +58,12 @@ export function readLlamaConfig(env: Record<string, string | undefined> = proces
   };
 }
 
+/**
+ * OpenRouter picks a provider per request, and the same batch took 3 seconds on Groq and 49 on another.
+ * These go first. If they are busy or lack the model, OpenRouter falls back to the others.
+ */
+const OPENROUTER_FAST_PROVIDERS = { order: ['groq', 'cerebras', 'sambanova'] };
+
 /** Room for a batch of 10 participants with 7 skills each. It is a ceiling: only what is generated is billed. */
 const DEFAULT_MAX_TOKENS = 6000;
 
@@ -111,6 +117,7 @@ async function chat(
         messages,
         temperature,
         max_tokens: maxTokens,
+        ...(config.baseUrl.includes('openrouter.ai') ? { provider: OPENROUTER_FAST_PROVIDERS } : {}),
         ...(config.jsonMode ? { response_format: { type: 'json_object' } } : {}),
       }),
       signal: controller.signal,

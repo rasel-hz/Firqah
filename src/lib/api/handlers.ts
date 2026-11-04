@@ -13,7 +13,7 @@ import {
 import { reconcileProfiles } from '../llama/reconcile.ts';
 import type { ReconciledProfile } from '../llama/reconcile.ts';
 import { buildTeamReviewUser, reconcileReviews } from '../llama/review.ts';
-import { challengeAnalysisSchema, normalizeSuggestedWeights, participantBatchSchema, teamReviewSchema } from '../llama/schemas.ts';
+import { challengeAnalysisSchema, dropStrayText, normalizeSuggestedWeights, participantBatchSchema, teamReviewSchema } from '../llama/schemas.ts';
 import { buildIndex, computeTeamMetrics, normalizeRequirements, optimizeTeams } from '../optimizer/index.ts';
 import {
   analyzeChallengeRequest,
@@ -77,13 +77,14 @@ async function parseBody<T>(request: Request, schema: ZodType<T>): Promise<T> {
 export async function handleAnalyzeChallenge(request: Request, deps: LlamaDeps = {}): Promise<Response> {
   try {
     const input = await parseBody(request, analyzeChallengeRequest);
-    const analysis = await callLlamaJson({
+    const reply = await callLlamaJson({
       system: CHALLENGE_ANALYSIS_SYSTEM,
       user: buildChallengeAnalysisUser(input),
       validate: (data) => challengeAnalysisSchema.parse(data),
       timeoutMs: LONG_CALL_TIMEOUT_MS,
       ...deps,
     });
+    const analysis = dropStrayText(reply);
     return Response.json({
       analysis: { ...analysis, required_skills: normalizeSuggestedWeights(analysis.required_skills) },
       source: 'llama',

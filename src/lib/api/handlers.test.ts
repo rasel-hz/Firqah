@@ -59,6 +59,19 @@ test('analyze-challenge: returns validated analysis with weights normalized to 1
   assert.deepEqual(body.analysis.required_skills.map((s: { weight: number }) => s.weight), [75, 25]);
 });
 
+test('analyze-challenge: advice in another alphabet is removed, and Arabic or Latin stays', async () => {
+  const reply = {
+    ...CHALLENGE_REPLY,
+    missing_information: ['тех стек', 'مدة التحدي', 'Figma'],
+    recommendations: ['التأكد 确认', 'راجع المتطلبات'],
+  };
+  const { fetchImpl } = mockLlama(() => completion(reply));
+  const res = await handleAnalyzeChallenge(post({ name: 'n', description: 'd', teamCount: 3 }), { config, fetchImpl });
+  const body = await res.json();
+  assert.deepEqual(body.analysis.missing_information, ['مدة التحدي', 'Figma']);
+  assert.deepEqual(body.analysis.recommendations, ['راجع المتطلبات']);
+});
+
 test('requests set max_tokens, so a provider default cannot cut the JSON short', async () => {
   let sent: { max_tokens?: number } = {};
   const fetchImpl = (async (_url: unknown, init?: RequestInit) => {

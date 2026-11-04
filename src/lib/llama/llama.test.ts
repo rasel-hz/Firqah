@@ -125,3 +125,17 @@ test('reconcile: validates ids, drops unapproved skills, flags unknown and unsup
   assert.equal(p2?.skills.find((s) => s.name === 'AI/ML')?.level, 5); // clamped to 0..5
   assert.ok(p2?.needsConfirmation.includes('Frontend')); // never mentioned = unknown
 });
+
+test('fast providers are requested on OpenRouter only', async () => {
+  const providerSent = async (baseUrl: string) => {
+    let body: { provider?: unknown } = {};
+    const fetchImpl = (async (_url: unknown, init?: RequestInit) => {
+      body = JSON.parse(String(init?.body));
+      return new Response(JSON.stringify({ choices: [{ message: { content: '{}' }, finish_reason: 'stop' }] }));
+    }) as typeof fetch;
+    await callLlamaJson({ system: 's', user: 'u', validate: (d) => d, config: { ...config, baseUrl }, fetchImpl });
+    return body.provider;
+  };
+  assert.ok(await providerSent('https://openrouter.ai/api/v1'));
+  assert.equal(await providerSent('https://example.test/v1'), undefined);
+});
