@@ -75,7 +75,7 @@ export default function ParticipantsPage() {
     if (summary.fatal) {
       setError(summary.fatal);
     } else if (summary.missingIds.length > 0) {
-      setPartial(`لم يرجع Llama نتيجة لـ ${summary.missingIds.length} مشارك. أعد المحاولة أو أدخل مستوياتهم يدويًا.${summary.warning ? ` ${summary.warning}` : ''}`);
+      setPartial(`لم يرجع AI نتيجة لـ ${summary.missingIds.length} مشارك. أعد المحاولة أو أدخل مستوياتهم يدويًا.${summary.warning ? ` ${summary.warning}` : ''}`);
     }
   }
 
@@ -122,7 +122,7 @@ export default function ParticipantsPage() {
         </div>
         {analyzing ? (
           <div className="space-y-2">
-            <Loading label={`يحلل Llama الأوصاف... اكتمل ${progress.done} من ${progress.total}`} />
+            <Loading label={`يحلل AI الأوصاف... اكتمل ${progress.done} من ${progress.total}`} />
             <PersonDots done={progress.done} total={progress.total} />
           </div>
         ) : null}

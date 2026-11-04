@@ -1,24 +1,45 @@
 @import 'tailwindcss';
 
-/* FIRQAH's colours: warm black, wool, madder red and saffron. Saffron marks what is complete. */
+/* FIRQAH's design system: Midnight for weight, Violet for AI and selection, Lime for action. */
 @theme {
-  --font-sans: var(--font-arabic), system-ui, sans-serif;
-  --font-display: var(--font-kufi), var(--font-arabic), sans-serif;
+  --font-sans: var(--font-stack);
 
-  --color-canvas: #0e0c0b;
-  --color-surface: #1a1715;
-  --color-raised: #2c2825;
-  --color-line: #38322d;
-  --color-control: #57504a;
-  --color-ink: #f4ecdf;
-  --color-muted: #bdb3a5;
-  --color-madder: #a32a1c;
-  --color-data: #e9ac2b;
-  --color-good: #e9ac2b;
-  --color-warn: #f0c987;
-  --color-bad: #ef6a56;
+  /* Brand palette */
+  --color-midnight: #17182d;
+  --color-violet: #9b87ff;
+  --color-lime: #c8f16b;
+  --color-peach: #ffad8b;
+  --color-sky: #79c9dc;
+  --color-lavender: #eee9ff;
+
+  /* Darker steps of the brand hues, for text and thin marks that must stay readable on light surfaces. */
+  --color-violet-deep: #5a44d1;
+  --color-lime-strong: #b6e34f;
+
+  /* Roles */
+  --color-canvas: #f6f5f9;
+  --color-surface: #ffffff;
+  --color-raised: #f4f1fe;
+  --color-line: #e4e0f0;
+  --color-control: #aaa6c4;
+  --color-ink: #17182d;
+  --color-muted: #5c5d74;
+  --color-data: #7b65f2;
+  --color-good: #47650f;
+  --color-warn: #8f5a14;
+  --color-bad: #b4321a;
+
+  --radius-card: 24px;
+  --radius-tile: 16px;
+
+  --shadow-card: 0 1px 2px rgb(23 24 45 / 0.04), 0 10px 28px -14px rgb(23 24 45 / 0.14);
+  --shadow-lift: 0 2px 4px rgb(23 24 45 / 0.05), 0 22px 40px -18px rgb(90 68 209 / 0.32);
 
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  scroll-padding-top: 88px;
 }
 
 body {
@@ -27,12 +48,13 @@ body {
   font-size: 14px;
   line-height: 20px;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
 input,
 select,
 textarea {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /* Numbers and code-like values read left to right, even inside RTL text. */
@@ -45,40 +67,165 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
+/* Latin labels are spaced out as small technical captions. Arabic must never get letter spacing. */
+.caption-en {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.on-dark :focus-visible {
+  outline-color: #fff;
+}
+
 /* Feedback under the hand. Every control answers a press. */
 .press {
   transition:
     transform 140ms var(--ease-out-soft),
     background-color 180ms ease,
     border-color 180ms ease,
+    box-shadow 180ms ease,
     color 180ms ease,
     opacity 180ms ease;
 }
 
-body {
-  overflow-x: clip;
+.lift {
+  transition:
+    transform 240ms var(--ease-out-soft),
+    box-shadow 240ms ease,
+    border-color 240ms ease;
 }
 
-/* A section that runs to both window edges, from inside the centred column. */
-.bleed {
-  margin-inline: calc(50% - 50vw);
+/* The hero's ground: lavender fading into the page, with the Midnight shape drawn above it on wide screens. */
+.hero-ground {
+  background: var(--color-midnight);
 }
 
-/* Parts of a landing section arrive as it scrolls in. Browsers without scroll timelines show them at once. */
-@supports (animation-timeline: view()) {
+@media (min-width: 1024px) {
+  .hero-ground {
+    background: linear-gradient(180deg, var(--color-lavender) 0%, #f1edff 70%, var(--color-canvas) 100%);
+  }
+}
+
+/* The Skill Constellation. Sizes follow its own width, so it scales as one piece on every screen. */
+.constellation {
+  container-type: inline-size;
+}
+
+.constellation-glow {
+  background: radial-gradient(closest-side, rgb(23 24 45 / 0.92) 0%, rgb(58 44 128 / 0.72) 48%, rgb(155 135 255 / 0.22) 78%, transparent 100%);
+}
+
+.tile {
+  display: flex;
+  width: clamp(74px, 21cqw, 116px);
+  aspect-ratio: 1 / 0.92;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: 24%;
+  padding: 6px;
+  color: var(--color-midnight);
+  font-size: clamp(11px, 2.7cqw, 14px);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  box-shadow:
+    0 14px 30px -6px rgb(23 24 45 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.65),
+    inset 0 -8px 14px rgb(23 24 45 / 0.08);
+  transition:
+    transform 260ms var(--ease-out-soft),
+    box-shadow 260ms ease;
+}
+
+.tile-center {
+  width: clamp(112px, 31cqw, 172px);
+  aspect-ratio: 1 / 0.98;
+  font-size: clamp(12px, 3cqw, 16px);
+}
+
+.tile-violet {
+  background: linear-gradient(150deg, #c6baff, var(--color-violet));
+}
+
+.tile-peach {
+  background: linear-gradient(150deg, #ffcdb8, var(--color-peach));
+}
+
+.tile-sky {
+  background: linear-gradient(150deg, #aee3ee, var(--color-sky));
+}
+
+.tile-lime {
+  background: linear-gradient(150deg, #e0f8a4, var(--color-lime));
+}
+
+button.tile:hover,
+button.tile:focus-visible,
+button.tile[data-active='true'] {
+  transform: scale(1.08) rotate(0deg) !important;
+  box-shadow:
+    0 18px 36px -6px rgb(155 135 255 / 0.65),
+    inset 0 1px 0 rgb(255 255 255 / 0.65),
+    inset 0 -8px 14px rgb(23 24 45 / 0.08);
+}
+
+.link-line {
+  fill: none;
+  stroke: rgb(200 241 107 / 0.5);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  transition:
+    stroke 220ms ease,
+    stroke-width 220ms ease;
+}
+
+.link-line[data-active='true'] {
+  stroke: var(--color-lime);
+  stroke-width: 2.4;
+}
+
+.particle {
+  display: none;
+}
+
+/* Hero layers drift at different speeds while scrolling. Browsers without scroll timelines keep them still. */
+@supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
-    .reveal {
-      animation: rise linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 55%;
+    .drift-slow,
+    .drift-fast {
+      animation: drift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 900px;
+    }
+
+    .drift-slow {
+      --drift: -48px;
+    }
+
+    .drift-fast {
+      --drift: 110px;
     }
   }
 }
 
-/* Every hidden starting state lives in this block, so reduced motion is simply the finished page. */
+/* Every hidden starting state and looping move lives here, so reduced motion is simply the finished page. */
 @media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
   .press:active:not(:disabled) {
     transform: scale(0.97);
+  }
+
+  .lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
   }
 
   .rise {
@@ -100,9 +247,81 @@ body {
     animation: arrive 240ms var(--ease-out-soft) both;
   }
 
-  /* The last piece settles into its place once when the page opens: the only move on the first screen. */
-  .settle {
-    animation: settle 900ms var(--ease-out-soft) 300ms both;
+  /* Waits until useScrollReveal marks it. Uses translate and scale, so it never fights a hover or a tilt. */
+  .scroll-in:not([data-seen]) {
+    opacity: 0;
+  }
+
+  .scroll-in[data-seen] {
+    animation: scroll-in 800ms var(--ease-out-soft) both;
+    animation-delay: calc(var(--step, 0) * 110ms);
+  }
+
+  .from-right {
+    --from-x: 44px;
+    --from-y: 0;
+  }
+
+  .from-left {
+    --from-x: -44px;
+    --from-y: 0;
+  }
+
+  .from-far {
+    --from-y: 56px;
+    --from-scale: 0.92;
+  }
+
+  .from-small {
+    --from-y: 0;
+    --from-scale: 0.6;
+  }
+
+  .spin-slow {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: spin-slow 48s linear infinite;
+  }
+
+  .draw-line {
+    stroke-dasharray: 5 6;
+    animation: dash-flow 3s linear infinite;
+  }
+
+  .pop-in {
+    animation: pop-in 700ms var(--ease-out-soft) both;
+    animation-delay: calc(var(--step, 0) * 110ms + 150ms);
+  }
+
+  .float {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: calc(var(--step, 0) * -1.1s);
+  }
+
+  .pulse-ring {
+    animation: pulse-ring 3.2s ease-out infinite;
+  }
+
+  .link-line {
+    stroke-dasharray: 5 7;
+    animation: dash-flow 2.6s linear infinite;
+  }
+
+  .particle {
+    display: block;
+    offset-rotate: 0deg;
+    animation: travel 4.2s ease-in-out infinite;
+    animation-delay: calc(var(--step, 0) * -0.8s);
+  }
+
+  .twinkle {
+    animation: twinkle 3.6s ease-in-out infinite;
+    animation-delay: calc(var(--step, 0) * -1.2s);
+  }
+
+  .node-pulse > * {
+    animation: node-pulse 1.2s ease-in-out infinite;
+    animation-delay: calc(var(--step, 0) * 180ms);
   }
 }
 
@@ -119,16 +338,87 @@ body {
   }
 }
 
-@keyframes settle {
-  from {
-    opacity: 0;
-    transform: translate(70px, -70px) rotate(45deg);
-  }
-}
-
 @keyframes arrive {
   from {
     opacity: 0;
     transform: scale(0.94);
+  }
+}
+
+@keyframes scroll-in {
+  from {
+    opacity: 0;
+    translate: var(--from-x, 0) var(--from-y, 30px);
+    scale: var(--from-scale, 1);
+  }
+}
+
+@keyframes drift {
+  to {
+    translate: 0 var(--drift);
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@keyframes float {
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes pulse-ring {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.32);
+  }
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+@keyframes travel {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes twinkle {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes node-pulse {
+  50% {
+    opacity: 0.35;
   }
 }

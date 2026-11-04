@@ -1,28 +1,31 @@
 // Shared building blocks, so every screen looks and behaves the same.
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { AlertTriangle, CheckCircle2, Info, Loader2, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info, Loader2, Sparkles, XCircle } from 'lucide-react';
+import { NodeGlyph } from './Brand.tsx';
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-[20px] bg-surface p-4 sm:p-[22px] ${className}`}>{children}</section>;
+  return <section className={`rounded-card border border-line/70 bg-surface p-4 shadow-card sm:p-6 ${className}`}>{children}</section>;
 }
 
 export function CardTitle({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
     <div className="mb-3">
-      <h2 className="text-base font-semibold">{children}</h2>
+      <h2 className="text-lg font-semibold">{children}</h2>
       {hint ? <p className="mt-1 text-[13px] text-muted">{hint}</p> : null}
     </div>
   );
 }
 
 const BUTTON_STYLES = {
-  primary: 'bg-ink text-canvas hover:bg-muted',
-  secondary: 'border border-control text-ink hover:border-ink',
-  ghost: 'text-muted hover:text-ink',
+  primary: 'bg-lime text-midnight hover:bg-lime-strong hover:shadow-[0_8px_20px_-8px_rgb(200_241_107/0.9)]',
+  secondary: 'border border-control bg-surface text-ink hover:border-violet-deep hover:text-violet-deep',
+  ghost: 'text-muted hover:bg-raised hover:text-ink',
+  selected: 'bg-violet text-midnight',
+  onDark: 'border border-white/50 text-white hover:border-white hover:bg-white/10',
 } as const;
 
 export const buttonClass = (variant: keyof typeof BUTTON_STYLES = 'primary') =>
-  `press inline-flex min-h-9 items-center justify-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-50 ${BUTTON_STYLES[variant]}`;
+  `press inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-deep disabled:cursor-not-allowed disabled:opacity-50 ${BUTTON_STYLES[variant]}`;
 
 export function Button({
   variant = 'primary',
@@ -39,7 +42,7 @@ export function Button({
 }
 
 export const inputClass =
-  'w-full rounded-lg border border-control bg-canvas px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none';
+  'min-h-11 w-full rounded-xl border border-control bg-surface px-3 py-2 text-sm text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-muted hover:border-violet-deep/60 focus:border-violet-deep focus:ring-3 focus:ring-violet/30 focus:outline-none';
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -53,17 +56,17 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 
 type Tone = 'error' | 'warning' | 'info' | 'success';
 
-const NOTICE_STYLES: Record<Tone, { Icon: typeof Info; iconColor: string }> = {
-  error: { Icon: XCircle, iconColor: 'text-bad' },
-  warning: { Icon: AlertTriangle, iconColor: 'text-warn' },
-  info: { Icon: Info, iconColor: 'text-muted' },
-  success: { Icon: CheckCircle2, iconColor: 'text-good' },
+const NOTICE_STYLES: Record<Tone, { Icon: typeof Info; iconColor: string; ground: string }> = {
+  error: { Icon: XCircle, iconColor: 'text-bad', ground: 'bg-peach/30' },
+  warning: { Icon: AlertTriangle, iconColor: 'text-warn', ground: 'bg-peach/15' },
+  info: { Icon: Info, iconColor: 'text-violet-deep', ground: 'bg-raised' },
+  success: { Icon: CheckCircle2, iconColor: 'text-good', ground: 'bg-lime/25' },
 };
 
 export function Notice({ tone, title, children }: { tone: Tone; title?: string; children?: ReactNode }) {
-  const { Icon, iconColor } = NOTICE_STYLES[tone];
+  const { Icon, iconColor, ground } = NOTICE_STYLES[tone];
   return (
-    <div role={tone === 'error' ? 'alert' : 'status'} className="arrive flex gap-3 rounded-xl bg-raised p-3 text-sm">
+    <div role={tone === 'error' ? 'alert' : 'status'} className={`arrive flex gap-3 rounded-tile p-3 text-sm ${ground}`}>
       <Icon className={`mt-0.5 size-4 shrink-0 ${iconColor}`} aria-hidden />
       <div className="min-w-0 space-y-1">
         {title ? <p className="font-medium">{title}</p> : null}
@@ -76,8 +79,12 @@ export function Notice({ tone, title, children }: { tone: Tone; title?: string; 
 /** No percentages: the app cannot know how far along the model is. */
 export function Loading({ label }: { label: string }) {
   return (
-    <div role="status" className="flex items-center gap-3 rounded-xl bg-raised p-3 text-sm text-muted">
-      <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
+    <div role="status" className="flex items-center gap-3 rounded-tile bg-raised p-3 text-sm text-muted">
+      <span className="node-pulse flex items-center gap-1" aria-hidden>
+        <span className="size-2 rounded-full bg-violet-deep" />
+        <span className="size-2 rounded-full bg-violet" style={{ '--step': 1 } as React.CSSProperties} />
+        <span className="size-2 rounded-full bg-lime-strong" style={{ '--step': 2 } as React.CSSProperties} />
+      </span>
       {label}
     </div>
   );
@@ -96,7 +103,8 @@ export function PersonDots({ done, total }: { done: number; total: number }) {
 
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-[20px] border border-dashed border-control p-8 text-center">
+    <div className="rounded-card border border-dashed border-control bg-surface/60 p-8 text-center">
+      <NodeGlyph className="mx-auto mb-3 size-9 text-violet-deep" />
       <p className="font-medium">{title}</p>
       {children ? <div className="mt-2 text-sm text-muted">{children}</div> : null}
     </div>
@@ -106,12 +114,17 @@ export function EmptyState({ title, children }: { title: string; children?: Reac
 /** Says where a value came from, so manual or computed data is never mistaken for AI output. */
 export function SourceBadge({ kind }: { kind: 'llama' | 'manual' | 'computed' | 'synthetic' }) {
   const styles = {
-    llama: ['من Llama', 'bg-raised text-ink'],
-    manual: ['يدوي', 'bg-raised text-muted'],
-    computed: ['محسوب بالكود', 'bg-raised text-muted'],
-    synthetic: ['بيانات اصطناعية', 'bg-raised text-warn'],
+    llama: ['من AI', 'bg-lavender text-violet-deep'],
+    manual: ['يدوي', 'bg-canvas text-muted'],
+    computed: ['محسوب بالكود', 'bg-sky/20 text-ink'],
+    synthetic: ['بيانات اصطناعية', 'bg-peach/25 text-warn'],
   }[kind];
-  return <span className={`inline-block flex-none rounded-full px-2 py-0.5 text-xs whitespace-nowrap ${styles[1]}`}>{styles[0]}</span>;
+  return (
+    <span className={`inline-flex flex-none items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${styles[1]}`}>
+      {kind === 'llama' ? <Sparkles className="size-3" aria-hidden /> : null}
+      {styles[0]}
+    </span>
+  );
 }
 
 export const LEVEL_LABELS = ['لا يوجد', 'مبتدئ', 'أساسي', 'متوسط', 'متقدم', 'خبير'];

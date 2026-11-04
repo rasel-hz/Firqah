@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NodeGlyph } from './Brand.tsx';
 import { EmptyState, Loading, buttonClass } from './ui.tsx';
 
 const STEPS = [
@@ -9,21 +10,31 @@ const STEPS = [
 
 export function ChallengeNav({ id, name, current }: { id: string; name: string; current: (typeof STEPS)[number]['key'] }) {
   return (
-    <div className="mb-6 space-y-3">
-      <h1 className="text-2xl font-semibold break-words">{name.trim() || 'تحدٍ جديد'}</h1>
-      <nav aria-label="خطوات التحدي" className="flex gap-1 overflow-x-auto border-b border-line">
-        {STEPS.map((step) => (
-          <Link
-            key={step.key}
-            href={`/challenge/${id}${step.path}`}
-            aria-current={step.key === current ? 'page' : undefined}
-            className={`press border-b-2 px-3 py-2 text-sm whitespace-nowrap ${
-              step.key === current ? 'border-ink font-medium text-ink' : 'border-transparent text-muted hover:text-ink'
-            }`}
-          >
-            {step.label}
-          </Link>
-        ))}
+    <div className="on-dark relative mb-6 overflow-hidden rounded-card bg-midnight p-5 text-white sm:p-7">
+      <span className="pointer-events-none absolute -top-20 -left-10 size-60 rounded-full bg-violet/35 blur-3xl" aria-hidden />
+      <NodeGlyph className="pointer-events-none absolute top-1/2 left-6 hidden size-28 -translate-y-1/2 text-white/60 md:block" />
+      <h1 className="relative text-2xl leading-snug font-bold break-words sm:text-[28px] md:me-36">{name.trim() || 'تحدٍ جديد'}</h1>
+      <nav aria-label="خطوات التحدي" className="relative mt-5">
+        <ol className="flex items-center gap-1 sm:gap-2">
+          {STEPS.map((step, i) => {
+            const isCurrent = step.key === current;
+            return (
+              <li key={step.key} className="flex min-w-0 items-center gap-1 sm:gap-2">
+                {i > 0 ? <span className="h-px w-2 shrink-0 bg-white/30 sm:w-6" aria-hidden /> : null}
+                <Link
+                  href={`/challenge/${id}${step.path}`}
+                  aria-current={isCurrent ? 'page' : undefined}
+                  className={`press inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 py-1 pe-3 text-sm whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 sm:gap-2 ${
+                    isCurrent ? 'bg-violet font-semibold text-midnight' : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <span className={`num flex size-6 items-center justify-center rounded-full text-xs font-semibold ${isCurrent ? 'bg-midnight text-white' : 'bg-white/15'}`} aria-hidden>{i + 1}</span>
+                  {step.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
       </nav>
     </div>
   );

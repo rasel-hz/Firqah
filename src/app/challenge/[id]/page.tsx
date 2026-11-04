@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { ChallengeGate, ChallengeNav } from '@/components/ChallengeNav.tsx';
+import { NodeGlyph } from '@/components/Brand.tsx';
 import { Button, Card, CardTitle, Field, LevelSelect, Loading, Notice, SourceBadge, buttonClass, inputClass } from '@/components/ui.tsx';
 import { postJson } from '@/lib/client/api.ts';
 import type { ChallengeAnalysis } from '@/lib/llama/schemas.ts';
@@ -131,7 +132,7 @@ export default function ChallengeSetupPage() {
           تحليل التحدي
         </Button>
         {!canAnalyze ? <p className="text-xs text-muted">اكتب الاسم والوصف لتفعيل التحليل.</p> : null}
-        {analyzing ? <Loading label="يحلل Llama التحدي..." /> : null}
+        {analyzing ? <Loading label="يحلل AI التحدي..." /> : null}
         {error ? (
           <Notice tone="error" title={error.message}>
             {error.code === 'missing_config' ? 'يمكنك المتابعة في الوضع اليدوي بإضافة المهارات بنفسك أدناه.' : null}
@@ -142,7 +143,7 @@ export default function ChallengeSetupPage() {
       {challenge.analysis ? (
         <Card className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold">تحليل التحدي</h2>
+            <h2 className="flex items-center gap-2 text-lg font-semibold"><NodeGlyph />تحليل التحدي</h2>
             <SourceBadge kind="llama" />
           </div>
           <p className="text-sm"><span className="text-muted">النوع: </span>{challenge.analysis.challengeType}</p>
@@ -162,7 +163,7 @@ export default function ChallengeSetupPage() {
       ) : null}
 
       <Card className="space-y-4">
-        <CardTitle hint="كل ما يقترحه Llama قابل للتعديل. يصبح الشرط إلزاميًا فقط إذا فعّلته أنت.">المهارات المطلوبة</CardTitle>
+        <CardTitle hint="كل ما يقترحه AI قابل للتعديل. يصبح الشرط إلزاميًا فقط إذا فعّلته أنت.">المهارات المطلوبة</CardTitle>
         {challenge.skills.length === 0 ? <p className="text-sm text-muted">لا توجد مهارات بعد. حلّل التحدي أو أضف مهارة يدويًا.</p> : null}
         <ul className="space-y-3">
           {challenge.skills.map((skill, i) => (
@@ -188,7 +189,7 @@ export default function ChallengeSetupPage() {
                 </Field>
               </div>
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="size-4 accent-white" checked={skill.hard} onChange={(e) => updateSkill(skill.skill, { hard: e.target.checked })} />
+                <input type="checkbox" className="size-4 accent-violet-deep" checked={skill.hard} onChange={(e) => updateSkill(skill.skill, { hard: e.target.checked })} />
                 شرط إلزامي في كل فريق
               </label>
             </li>

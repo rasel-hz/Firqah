@@ -1,41 +1,35 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
-import { IBM_Plex_Sans_Arabic, Reem_Kufi } from 'next/font/google';
-import { PiecesMark } from '@/components/Pieces.tsx';
+import { Space_Grotesk, Tajawal } from 'next/font/google';
 import './globals.css';
 
-const arabic = IBM_Plex_Sans_Arabic({
-  subsets: ['arabic', 'latin'],
-  weight: ['400', '500', '600'],
+// Tajawal has no 600, so semibold text uses its 700.
+const arabic = Tajawal({
+  subsets: ['arabic'],
+  weight: ['400', '500', '700'],
   variable: '--font-arabic',
 });
 
-const kufi = Reem_Kufi({
-  subsets: ['arabic', 'latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-kufi',
+const latin = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-latin',
 });
+
+// Each font's generated fallback is Arial, which has Arabic letters and would take them before Tajawal gets a chance.
+// So the stack names only the real fonts: Space Grotesk covers Latin, and Tajawal takes the Arabic it leaves.
+const realFamily = (font: { style: { fontFamily: string } }) => font.style.fontFamily.split(',')[0];
+const fontStack = `${realFamily(latin)}, ${realFamily(arabic)}, system-ui, sans-serif`;
 
 export const metadata: Metadata = {
   title: 'فِرقة',
-  description: 'كوّن فرقًا تناسب المهمة، لا مجرد مجموعات متساوية العدد.',
+  description: 'كل تحدٍ له فريقه، وفِرقة تعرف كيف تجمعهم.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={`${arabic.variable} ${kufi.variable}`}>
-      <body className="min-h-screen font-sans">
-        <header>
-          <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
-            <Link href="/" className="press flex items-center gap-2 font-display text-xl font-bold text-ink hover:text-muted">
-              <PiecesMark />
-              فرقة
-            </Link>
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
-      </body>
+    <html lang="ar" dir="rtl" className={`${arabic.variable} ${latin.variable}`} style={{ '--font-stack': fontStack } as React.CSSProperties}>
+      <body className="min-h-screen font-sans">{children}</body>
     </html>
   );
 }

@@ -10,12 +10,13 @@ import type { SkillStatus } from '@/lib/llama/review.ts';
 import { Button, Card } from './ui.tsx';
 
 const STATUS_LABEL: Record<SkillStatus, string> = { met: 'مغطاة', unconfirmed: 'غير مؤكدة', missing: 'نقص' };
+const SEAT_TONES = ['bg-violet/70', 'bg-peach/80', 'bg-sky/70', 'bg-lime/80'];
 
 function StatusMark({ status }: { status: SkillStatus }) {
-  // The landing page's pieces at a small size: a piece in place, an outlined place, a missing piece.
-  if (status === 'met') return <span className="block size-2.5 rotate-45 bg-data" />;
-  if (status === 'unconfirmed') return <span className="block size-2.5 rotate-45 border border-muted" />;
-  return <span className="block size-2.5 rotate-45 bg-bad" />;
+  // A piece in place, an outlined place, a missing piece: the shape carries the meaning, not only the colour.
+  if (status === 'met') return <span className="block size-2.5 rotate-45 rounded-[2px] border border-good bg-lime" />;
+  if (status === 'unconfirmed') return <span className="block size-2.5 rotate-45 rounded-[2px] border border-muted" />;
+  return <span className="block size-2.5 rotate-45 rounded-[2px] bg-bad" />;
 }
 
 export function TeamBoard({
@@ -87,7 +88,7 @@ export function TeamBoard({
     <Card className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold">لوحة الفرق</h2>
+          <h2 className="text-lg font-semibold">لوحة الفرق</h2>
           <p className="mt-1 text-[13px] text-muted">اختر مهارة لترى المؤهلين فيها، أو فريقًا لقراءة تفاصيله.</p>
         </div>
         <Button variant="ghost" onClick={replayFormation}>
@@ -105,8 +106,8 @@ export function TeamBoard({
               type="button"
               aria-pressed={active}
               onClick={() => setLens(skill)}
-              className={`press min-h-8 rounded-full px-3 py-1 text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
-                active ? 'bg-ink font-medium text-canvas' : 'bg-raised text-muted hover:text-ink'
+              className={`press min-h-8 rounded-full px-3 py-1 text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-deep ${
+                active ? 'bg-violet font-medium text-midnight' : 'bg-raised text-muted hover:text-ink'
               }`}
             >
               <span className={skill ? 'ltr-value' : ''}>{skill ?? 'كل الأعضاء'}</span>
@@ -125,8 +126,8 @@ export function TeamBoard({
               type="button"
               aria-pressed={isSelected}
               onClick={() => onSelect(team.id)}
-              className={`press block w-full rounded-2xl p-4 text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
-                isSelected ? 'bg-raised' : 'bg-canvas hover:bg-raised/60'
+              className={`press lift block w-full rounded-2xl border p-4 text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-deep ${
+                isSelected ? 'border-violet bg-raised ring-1 ring-violet' : 'border-line bg-canvas hover:bg-raised/60'
               }`}
             >
               <span className="flex items-center justify-between gap-2">
@@ -135,7 +136,7 @@ export function TeamBoard({
               </span>
 
               <span className="mt-3 grid grid-cols-4 gap-1 sm:grid-cols-5">
-                {team.members.map((member) => {
+                {team.members.map((member, seat) => {
                   const lit = lens ? member.qualified.includes(lens) : false;
                   const dim = lens !== null && !lit;
                   return (
@@ -143,8 +144,8 @@ export function TeamBoard({
                       <span
                         data-member={member.id}
                         className={`relative flex size-10 items-center justify-center rounded-full text-sm font-medium transition-[background-color,color,opacity] duration-200 motion-reduce:transition-none ${
-                          lit ? 'bg-data text-canvas' : isSelected ? 'bg-control text-ink' : 'bg-raised text-ink'
-                        } ${dim ? 'opacity-40' : ''}`}
+                          SEAT_TONES[seat % SEAT_TONES.length]
+                        } text-ink ${lit ? 'ring-2 ring-violet-deep ring-offset-2 ring-offset-surface' : ''} ${dim ? 'opacity-40' : ''}`}
                       >
                         {initialOf(member.name)}
                       </span>

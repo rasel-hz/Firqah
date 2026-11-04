@@ -194,26 +194,26 @@ export default function ResultsPage() {
 
       {result.status === 'ok' && score && openTeam && openMetrics ? (
         <>
-          <section aria-label="الملخص" className="rise grid grid-cols-2 gap-px overflow-hidden rounded-[20px] bg-canvas lg:grid-cols-4">
-            <div className="bg-surface p-4 sm:p-[22px]">
-              <p className="text-[13px] text-muted">الدرجة الإجمالية</p>
-              <p className="mt-1 text-start text-[26px] leading-10 font-semibold whitespace-nowrap sm:text-[32px]">
+          <section aria-label="الملخص" className="rise grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="rounded-card bg-midnight p-4 text-white sm:p-[22px]">
+              <p className="text-[13px] text-white/75">الدرجة الإجمالية</p>
+              <p dir="ltr" className="mt-1 text-right text-[26px] leading-10 font-semibold whitespace-nowrap text-lime sm:text-[32px]">
                 <RollingNumber key={run.id} value={score.overall} />
-                <span className="ltr-value text-sm font-normal text-muted"> / 100</span>
+                <span className="text-sm font-normal text-white/75"> / 100</span>
               </p>
             </div>
-            <div className="bg-surface p-4 sm:p-[22px]">
+            <div className="rounded-card border border-line/70 bg-surface p-4 shadow-card sm:p-[22px]">
               <p className="text-[13px] text-muted">الشروط الإلزامية</p>
               <p className={`mt-1 flex items-center gap-2 text-base leading-10 font-medium ${result.validation.valid ? 'text-good' : 'text-bad'}`}>
                 {result.validation.valid ? <CheckCircle2 className="size-4" aria-hidden /> : <XCircle className="size-4" aria-hidden />}
                 {result.validation.valid ? 'كلها محققة' : 'غير محققة'}
               </p>
             </div>
-            <div className="bg-surface p-4 sm:p-[22px]">
+            <div className="rounded-card border border-line/70 bg-surface p-4 shadow-card sm:p-[22px]">
               <p className="text-[13px] text-muted">مقابل أفضل توزيع عشوائي</p>
               <p className="ltr-value num mt-1 text-start text-2xl leading-10 font-medium">{lead === null ? '—' : `${lead > 0 ? '+' : ''}${lead}`}</p>
             </div>
-            <div className="bg-surface p-4 sm:p-[22px]">
+            <div className="rounded-card border border-line/70 bg-surface p-4 shadow-card sm:p-[22px]">
               <p className="text-[13px] text-muted">قيم المهارات المجهولة</p>
               <p className="ltr-value num mt-1 text-start text-2xl leading-10 font-medium">{Math.round(score.unknownRatio * 100)}%</p>
             </div>
@@ -225,7 +225,7 @@ export default function ResultsPage() {
 
           <Card className="rise space-y-4" key={`${run.id}-${openTeam.id}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="ltr-value text-base font-semibold">{openTeam.id}</h2>
+              <h2 className="ltr-value text-lg font-semibold">{openTeam.id}</h2>
               <span className="text-sm text-muted">
                 التغطية <span className="ltr-value num font-medium text-ink">{teamCoverage(openMetrics, requirements)}%</span> · الخبرة{' '}
                 <span className="ltr-value num font-medium text-ink">{openMetrics.experience}</span>
@@ -253,9 +253,9 @@ export default function ResultsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                {reviewing && !openReview ? <Loading label="يكتب Llama مراجعة الفرق..." /> : null}
+                {reviewing && !openReview ? <Loading label="يكتب AI مراجعة الفرق..." /> : null}
                 {run.reviewError ? (
-                  <Notice tone="warning" title="مراجعة Llama غير متاحة">
+                  <Notice tone="warning" title="مراجعة AI غير متاحة">
                     <p>{run.reviewError} الفرق صالحة ولا تعتمد على المراجعة.</p>
                     <Button variant="secondary" className="mt-2" loading={reviewing} onClick={() => void requestReview(run, challenge.name, challenge.objective)}>
                       <Sparkles className="size-4" aria-hidden />
@@ -264,7 +264,7 @@ export default function ResultsPage() {
                   </Notice>
                 ) : null}
                 {openReview ? <TeamReview review={openReview} /> : null}
-                {run.review && !openReview ? <Notice tone="warning" title="لم يرجع Llama مراجعة لهذا الفريق" /> : null}
+                {run.review && !openReview ? <Notice tone="warning" title="لم يرجع AI مراجعة لهذا الفريق" /> : null}
               </div>
             </div>
           </Card>
@@ -272,7 +272,7 @@ export default function ResultsPage() {
           <div className="grid grid-cols-1 gap-[14px] lg:grid-cols-3">
             <Card className="space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-base font-semibold">تفصيل الدرجة</h2>
+                <h2 className="text-lg font-semibold">تفصيل الدرجة</h2>
                 <SourceBadge kind="computed" />
               </div>
               <div className="space-y-2">

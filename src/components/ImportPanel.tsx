@@ -75,9 +75,9 @@ export function ImportPanel({ existingNames, onImport }: { existingNames: string
   return (
     <Card className="space-y-4">
       <CardTitle>إضافة مشاركين</CardTitle>
-      <div role="tablist" aria-label="طريقة الإضافة" className="flex flex-wrap gap-2">
+      <div role="tablist" aria-label="طريقة الإضافة" className="inline-flex flex-wrap gap-1 rounded-full bg-raised p-1">
         {MODES.map((m) => (
-          <Button key={m.key} role="tab" aria-selected={mode === m.key} variant={mode === m.key ? 'secondary' : 'ghost'} onClick={() => { setMode(m.key); setPreview(null); setFileError(null); }}>
+          <Button key={m.key} role="tab" aria-selected={mode === m.key} variant={mode === m.key ? 'selected' : 'ghost'} onClick={() => { setMode(m.key); setPreview(null); setFileError(null); }}>
             {m.label}
           </Button>
         ))}
@@ -87,7 +87,7 @@ export function ImportPanel({ existingNames, onImport }: { existingNames: string
         <div className="space-y-3">
           <p className="text-sm text-muted">يجب أن يحتوي الملف على العمودين name و description.</p>
           <div className="flex flex-wrap gap-2">
-            <label className={`${buttonClass()} cursor-pointer focus-within:outline-2 focus-within:outline-ink`}>
+            <label className={`${buttonClass()} cursor-pointer focus-within:outline-2 focus-within:outline-violet-deep`}>
               <FileUp className="size-4" aria-hidden />
               اختيار ملف
               <input type="file" accept=".csv,text/csv" className="sr-only" onChange={readFile} />
@@ -151,7 +151,7 @@ export function ImportPanel({ existingNames, onImport }: { existingNames: string
             </Notice>
           ) : null}
           {preview.rows.length > 0 ? (
-            <div className="max-h-64 overflow-auto rounded-lg border border-line">
+            <div className="max-h-64 overflow-auto rounded-tile border border-line">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-raised text-start text-muted">
                   <tr>

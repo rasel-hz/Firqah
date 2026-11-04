@@ -64,12 +64,11 @@ export function RollingNumber({ value, className = '' }: { value: number; classN
 
 const SCALE_MAX = 5;
 
-/** One hue, more is stronger. Text flips on the strongest cells so it stays readable. */
+/** One hue, more is stronger. Midnight text stays readable on every step of it. */
 function cellStyle(value: number) {
   const share = Math.round((Math.min(value, SCALE_MAX) / SCALE_MAX) * 85);
   return {
     backgroundColor: `color-mix(in oklab, var(--color-data) ${share}%, var(--color-surface))`,
-    color: share > 45 ? '#0e0c0b' : 'var(--color-ink)',
   };
 }
 

@@ -14,7 +14,7 @@ export type LlamaErrorCode =
 /** Messages are safe to show to the user: no stack traces, no secrets. */
 const USER_MESSAGES: Record<LlamaErrorCode, string> = {
   missing_config:
-    'خدمة Llama غير مهيّأة. أضف LLAMA_API_BASE_URL و LLAMA_API_KEY و LLAMA_MODEL في ملف البيئة ثم أعد تشغيل التطبيق.',
+    'خدمة AI غير مهيّأة. أضف LLAMA_API_BASE_URL و LLAMA_API_KEY و LLAMA_MODEL في ملف البيئة ثم أعد تشغيل التطبيق.',
   timeout: 'استغرق النموذج وقتًا أطول من المسموح. حاول مرة أخرى.',
   rate_limited: 'تم تجاوز حد الطلبات لدى مزوّد النموذج. انتظر قليلًا ثم حاول مجددًا.',
   network: 'تعذّر الوصول إلى مزوّد النموذج. تحقق من الاتصال ثم حاول مجددًا.',
